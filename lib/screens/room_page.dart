@@ -36,62 +36,62 @@ class _RoomPageState extends State<RoomPage> {
     return 1;
   }
 
-  // 显示输入分享码的弹窗
-  void _showPasteDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        String shareCode = '';
-        return AlertDialog(
-          title: const Text('导入房间'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                onChanged: (value) {
-                  shareCode = value;
-                },
-                decoration: const InputDecoration(
-                  hintText: '请输入分享码或链接',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                    await RoomShareHelper.importFromClipboard(context);
-                  },
-                  icon: const Icon(Icons.paste),
-                  label: const Text('从剪贴板导入'),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('取消'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (shareCode.isNotEmpty) {
-                  Navigator.of(context).pop();
-                  await RoomShareHelper.importRoom(context, shareCode);
-                }
-              },
-              child: const Text('导入'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  // // 显示输入分享码的弹窗
+  // void _showPasteDialog() {
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       String shareCode = '';
+  //       return AlertDialog(
+  //         title: const Text('导入房间'),
+  //         content: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             TextField(
+  //               onChanged: (value) {
+  //                 shareCode = value;
+  //               },
+  //               decoration: const InputDecoration(
+  //                 hintText: '请输入分享码或链接',
+  //                 border: OutlineInputBorder(),
+  //               ),
+  //               maxLines: 3,
+  //             ),
+  //             const SizedBox(height: 16),
+  //             SizedBox(
+  //               width: double.infinity,
+  //               child: OutlinedButton.icon(
+  //                 onPressed: () async {
+  //                   Navigator.of(context).pop();
+  //                   await RoomShareHelper.importFromClipboard(context);
+  //                 },
+  //                 icon: const Icon(Icons.paste),
+  //                 label: const Text('从剪贴板导入'),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.of(context).pop();
+  //             },
+  //             child: const Text('取消'),
+  //           ),
+  //           TextButton(
+  //             onPressed: () async {
+  //               if (shareCode.isNotEmpty) {
+  //                 Navigator.of(context).pop();
+  //                 await RoomShareHelper.importRoom(context, shareCode);
+  //               }
+  //             },
+  //             child: const Text('导入'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   // 构建房间列表视图
   Widget _buildRoomsView(BuildContext context, BoxConstraints constraints) {
@@ -99,40 +99,40 @@ class _RoomPageState extends State<RoomPage> {
     final rooms = _aps.rooms.watch(context);
     final selectedRoom = _aps.selectroom.watch(context);
 
-    // 如果是重排序模式，使用ReorderableListView
-    if (_isReorderMode) {
-      return ReorderableListView.builder(
-        padding: const EdgeInsets.all(12.0),
-        itemCount: rooms.length,
-        onReorder: (oldIndex, newIndex) {
-          if (newIndex > oldIndex) {
-            newIndex -= 1;
-          }
-          final List<Room> reorderedRooms = List.from(rooms);
-          final Room item = reorderedRooms.removeAt(oldIndex);
-          reorderedRooms.insert(newIndex, item);
-          _aps.reorderRooms(reorderedRooms);
-        },
-        itemBuilder: (context, index) {
-          final room = rooms[index];
-          return Card(
-            key: ValueKey(room.id),
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            child: ListTile(
-              leading: const Icon(Icons.drag_handle),
-              title: Text(room.name),
-              subtitle: Text('排序: ${room.sortOrder}'),
-              trailing: IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  showEditRoomDialog(context, room: room);
-                },
-              ),
-            ),
-          );
-        },
-      );
-    }
+    // // 如果是重排序模式，使用ReorderableListView
+    // if (_isReorderMode) {
+    //   return ReorderableListView.builder(
+    //     padding: const EdgeInsets.all(12.0),
+    //     itemCount: rooms.length,
+    //     onReorder: (oldIndex, newIndex) {
+    //       if (newIndex > oldIndex) {
+    //         newIndex -= 1;
+    //       }
+    //       final List<Room> reorderedRooms = List.from(rooms);
+    //       final Room item = reorderedRooms.removeAt(oldIndex);
+    //       reorderedRooms.insert(newIndex, item);
+    //       _aps.reorderRooms(reorderedRooms);
+    //     },
+    //     itemBuilder: (context, index) {
+    //       final room = rooms[index];
+    //       return Card(
+    //         key: ValueKey(room.id),
+    //         margin: const EdgeInsets.symmetric(vertical: 4),
+    //         child: ListTile(
+    //           leading: const Icon(Icons.drag_handle),
+    //           title: Text(room.name),
+    //           subtitle: Text('排序: ${room.sortOrder}'),
+    //           trailing: IconButton(
+    //             icon: const Icon(Icons.edit),
+    //             onPressed: () {
+    //               showEditRoomDialog(context, room: room);
+    //             },
+    //           ),
+    //         ),
+    //       );
+    //     },
+    //   );
+    // }
 
     // 正常的网格视图
     return CustomScrollView(
@@ -182,7 +182,6 @@ class _RoomPageState extends State<RoomPage> {
       body: Column(
         children: [
           // 顶部显示当前选中房间信息
-          if (selectedRoom != null && isConnected == CoState.connected)
             MouseRegion(
               onEnter: (_) => setState(() => isHovered = true),
               onExit: (_) => setState(() => isHovered = false),
@@ -245,15 +244,7 @@ class _RoomPageState extends State<RoomPage> {
             ),
           Expanded(
             child:
-                isConnected != CoState.idle
-                    // 已连接：显示用户列表
-                    ? const UserPage()
-                    // 未连接：显示房间列表
-                    : LayoutBuilder(
-                      builder: (context, constraints) {
-                        return _buildRoomsView(context, constraints);
-                      },
-                    ),
+                const UserPage()
           ),
         ],
       ),
@@ -263,28 +254,28 @@ class _RoomPageState extends State<RoomPage> {
               : Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // 排序按钮移到最前
-                  FloatingActionButton(
-                    heroTag: 'room_sort',
-                    onPressed: () {
-                      RoomReorderSheet.show(context, _aps.rooms.value);
-                    },
-                    child: const Icon(Icons.sort),
-                  ),
-                  const SizedBox(width: 16),
-                  // 黏贴按钮居中
-                  FloatingActionButton(
-                    heroTag: 'paste',
-                    onPressed: _showPasteDialog,
-                    child: const Icon(Icons.paste),
-                  ),
-                  const SizedBox(width: 16),
-                  // 增加按钮最后
-                  FloatingActionButton(
-                    heroTag: 'add',
-                    onPressed: () => showAddRoomDialog(context),
-                    child: const Icon(Icons.add),
-                  ),
+                  // // 排序按钮移到最前
+                  // FloatingActionButton(
+                  //   heroTag: 'room_sort',
+                  //   onPressed: () {
+                  //     RoomReorderSheet.show(context, _aps.rooms.value);
+                  //   },
+                  //   child: const Icon(Icons.sort),
+                  // ),
+                  // const SizedBox(width: 16),
+                  // // 黏贴按钮居中
+                  // FloatingActionButton(
+                  //   heroTag: 'paste',
+                  //   onPressed: _showPasteDialog,
+                  //   child: const Icon(Icons.paste),
+                  // ),
+                  // const SizedBox(width: 16),
+                  // // 增加按钮最后
+                  // FloatingActionButton(
+                  //   heroTag: 'add',
+                  //   onPressed: () => showAddRoomDialog(context),
+                  //   child: const Icon(Icons.add),
+                  // ),
                 ],
               ),
     );

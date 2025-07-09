@@ -15,16 +15,25 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     // 使用 Riverpod 监听节点数据
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => RoomSettingsSheet.show(context),
-        child: const Icon(Icons.bar_chart),
-        tooltip: '房间设置',
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => RoomSettingsSheet.show(context),
+      //   child: const Icon(Icons.bar_chart),
+      //   tooltip: '房间设置',
+      // ),
       body: Builder(
         builder: (context) {
           final netStatus = Aps().netStatus.watch(context);
@@ -80,85 +89,196 @@ class _UserPageState extends State<UserPage> {
             );
           } else {
             // 获取排序选项
-            final sortOption = Aps().sortOption.watch(context);
+            // final sortOption = Aps().sortOption.watch(context);
             // 获取排序顺序
-            final sortOrder = Aps().sortOrder.watch(context);
-            // 获取显示模式
-            final displayMode = Aps().displayMode.watch(context);
+            // final sortOrder = Aps().sortOrder.watch(context);
             // 获取原始节点列表
             var nodes = Aps().netStatus.watch(context)!.nodes;
-            
-            // 根据排序选项对节点进行排序
-            if (sortOption == 1) {
-              // 按延迟排序
-              nodes.sort((a, b) {
-                int comparison = a.latencyMs.compareTo(b.latencyMs);
-                return sortOrder == 0 ? comparison : -comparison;
-              });
-            } else if (sortOption == 2) {
-              // 按用户名长度排序
-              nodes.sort((a, b) {
-                int comparison = a.hostname.length.compareTo(b.hostname.length);
-                return sortOrder == 0 ? comparison : -comparison;
-              });
-            }
+            nodes.sort((a, b) {
+              return a.latencyMs.compareTo(b.latencyMs);
+            });
+            // // 根据排序选项对节点进行排序
+            // if (sortOption == 1) {
+            //   // 按延迟排序
+            //   nodes.sort((a, b) {
+            //     int comparison = a.latencyMs.compareTo(b.latencyMs);
+            //     return sortOrder == 0 ? comparison : -comparison;
+            //   });
+            // } else if (sortOption == 2) {
+            //   // 按用户名长度排序
+            //   nodes.sort((a, b) {
+            //     int comparison = a.hostname.length.compareTo(b.hostname.length);
+            //     return sortOrder == 0 ? comparison : -comparison;
+            //   });
+            // }
             // 如果sortOption为0，则不排序
 
             // 根据显示模式过滤节点
             List<KVNodeInfo> filteredNodes = nodes;
-            if (displayMode == 1) {
-              // 仅显示用户（排除服务器）
-              filteredNodes = nodes.where((node) => 
-                  !node.hostname.startsWith('PublicServer_')).toList();
-            } else if (displayMode == 2) {
-              // 仅显示服务器
-              filteredNodes = nodes.where((node) => 
-                  node.hostname.startsWith('PublicServer_')).toList();
+            // 仅显示用户（排除服务器）
+            filteredNodes =
+                nodes
+                    .where((node) => !node.hostname.startsWith('PublicServer_'))
+                    .toList();
+
+            // 根据搜索查询过滤节点
+            if (_searchQuery.isNotEmpty) {
+              filteredNodes =
+                  filteredNodes
+                      .where(
+                        (node) => node.hostname.toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        ),
+                      )
+                      .toList();
             }
 
             // 返回一个可滚动的视图
-            return CustomScrollView(
-              // 始终允许滚动,即使内容不足一屏
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                // 为网格添加内边距
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                  // 使用瀑布流网格布局
-                  sliver: SliverMasonryGrid(
-                    // 配置网格布局参数
-                    gridDelegate:
-                        SliverSimpleGridDelegateWithFixedCrossAxisCount(
-                          // 根据屏幕宽度动态计算列数
-                          crossAxisCount: _getColumnCount(
-                            MediaQuery.of(context).size.width,
-                          ),
-                        ),
-                    // 设置网格项之间的间距
-                    mainAxisSpacing: 8.0,
-                    crossAxisSpacing: 8.0,
-                    // 配置子项构建器
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        // 获取当前索引对应的玩家数据
-                        final player = filteredNodes[index];
-                        // 根据简单列表模式选项返回不同的卡片组件
-                        return Aps().userListSimple.watch(context)
-                            ? MiniUserCard(
-                                player: player,
-                                colorScheme: colorScheme,
-                                localIPv4: Aps().ipv4.watch(context),
+            return Column(
+              children: [
+                // 搜索框
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: '搜索玩家名称...',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon:
+                          _searchQuery.isNotEmpty
+                              ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() {
+                                    _searchQuery = '';
+                                  });
+                                },
                               )
-                            : AllUserCard(
-                                player: player,
-                                colorScheme: colorScheme,
-                                localIPv4: Aps().ipv4.watch(context),
-                              );
-                      },
-                      // 设置子项数量为过滤后的节点数量
-                      childCount: filteredNodes.length,
+                              : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.outline.withOpacity(0.5),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.outline.withOpacity(0.5),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 2,
+                        ),
+                      ),
+                      filled: true,
+                      fillColor: colorScheme.surface,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
+                  ),
+                ),
+                // 显示搜索结果数量
+                if (_searchQuery.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      '找到 ${filteredNodes.length} 个玩家',
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
                     ),
                   ),
+                // 玩家列表
+                Expanded(
+                  child:
+                      filteredNodes.isEmpty && _searchQuery.isNotEmpty
+                          ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.search_off,
+                                  size: 64,
+                                  color: colorScheme.primary.withOpacity(0.6),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '未找到匹配的玩家',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '尝试使用不同的搜索关键词',
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface.withOpacity(
+                                      0.7,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : CustomScrollView(
+                            // 始终允许滚动,即使内容不足一屏
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            slivers: [
+                              // 为网格添加内边距
+                              SliverPadding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  12,
+                                  0,
+                                  12,
+                                  0,
+                                ),
+                                // 使用瀑布流网格布局
+                                sliver: SliverMasonryGrid(
+                                  // 配置网格布局参数
+                                  gridDelegate:
+                                      SliverSimpleGridDelegateWithFixedCrossAxisCount(
+                                        // 根据屏幕宽度动态计算列数
+                                        crossAxisCount: _getColumnCount(
+                                          MediaQuery.of(context).size.width,
+                                        ),
+                                      ),
+                                  // 设置网格项之间的间距
+                                  mainAxisSpacing: 8.0,
+                                  crossAxisSpacing: 8.0,
+                                  // 配置子项构建器
+                                  delegate: SliverChildBuilderDelegate(
+                                    (context, index) {
+                                      // 获取当前索引对应的玩家数据
+                                      final player = filteredNodes[index];
+                                      // 根据简单列表模式选项返回不同的卡片组件
+                                      return MiniUserCard(
+                                        player: player,
+                                        colorScheme: colorScheme,
+                                        localIPv4: Aps().ipv4.watch(context),
+                                      );
+                                    },
+                                    // 设置子项数量为过滤后的节点数量
+                                    childCount: filteredNodes.length,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                 ),
               ],
             );

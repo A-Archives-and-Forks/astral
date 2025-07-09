@@ -4,6 +4,7 @@ import 'package:astral/wid/canvas_jump.dart';
 import 'package:astral/k/models/room.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 
 class UserIpBox extends StatefulWidget {
   const UserIpBox({super.key});
@@ -110,38 +111,57 @@ class _UserIpBoxState extends State<UserIpBox> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+         
+ Row(
             children: [
-              Icon(Icons.person, color: colorScheme.primary, size: 22),
+              Icon(Icons.network_check, color: colorScheme.primary, size: 22),
               const SizedBox(width: 8),
               const Text(
-                '用户信息',
+                '网络状态',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
               ),
               const Spacer(),
-              if (Aps().Connec_state.watch(context) != CoState.idle)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+              // 添加状态指示器
+              Container(
+                margin: const EdgeInsets.only(right: 4), 
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(
+                    Aps().Connec_state.watch(context),
+                    colorScheme,
                   ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.secondaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '已锁定',
-                    style: TextStyle(
-                      color: colorScheme.onSecondaryContainer,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w300,
-                    ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _getStatusText(Aps().Connec_state.watch(context)),
+                  style: TextStyle(
+                    color: colorScheme.onPrimary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w300,
                   ),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
 
+          if (Aps().ipv4.watch(context).isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              children: [
+                Icon(Icons.public, size: 20, color: colorScheme.primary),
+                const Text(
+                  '虚拟IP: ',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  Aps().ipv4.watch(context),
+                  style: TextStyle(color: colorScheme.secondary),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 16),
           TextField(
             controller: _usernameController,
             focusNode: _usernameControllerFocusNode,
@@ -155,7 +175,7 @@ class _UserIpBoxState extends State<UserIpBox> {
               });
             },
             decoration: InputDecoration(
-              labelText: '用户名',
+              labelText: '玩家昵称',
               hintText: '输入喜欢的名字',
               border: const OutlineInputBorder(),
               prefixIcon: Icon(Icons.person, color: colorScheme.primary),
@@ -167,118 +187,141 @@ class _UserIpBoxState extends State<UserIpBox> {
             ),
           ),
 
-          const SizedBox(height: 14),
-          InkWell(
-            onTap:
-                Aps().Connec_state.watch(context) != CoState.connected
-                    ? () => CanvasJump.show(
-                      context,
-                      rooms: _aps.rooms.watch(context).cast<Room>(),
-                      onSelect: (Room room) {
-                        _aps.setRoom(room);
-                      },
-                    )
-                    : null,
-            child: InputDecorator(
-              decoration: InputDecoration(
-                labelText: '选择房间',
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 12,
-                ),
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                enabled: Aps().Connec_state.watch(context) == CoState.idle,
-                border: const OutlineInputBorder(),
-                prefixIcon: Icon(Icons.apartment, color: colorScheme.primary),
-                suffixIcon: Icon(Icons.menu, color: colorScheme.primary),
-              ),
-              child: IgnorePointer(
-                ignoring:
-                    Aps().Connec_state.watch(context) == CoState.connected,
-                child: Text(
-                  Aps().selectroom.watch(context)?.name ?? '请选择房间',
-                  style: TextStyle(
-                    color:
-                        Aps().Connec_state.watch(context) != CoState.connected
-                            ? Theme.of(context).textTheme.bodyLarge?.color
-                            : Theme.of(context).disabledColor,
-                  ),
-                ),
-              ),
-            ),
-          ),
+          // InkWell(
+          //   onTap:
+          //       Aps().Connec_state.watch(context) != CoState.connected
+          //           ? () => CanvasJump.show(
+          //             context,
+          //             rooms: _aps.rooms.watch(context).cast<Room>(),
+          //             onSelect: (Room room) {
+          //               _aps.setRoom(room);
+          //             },
+          //           )
+          //           : null,
+          //   child: InputDecorator(
+          //     decoration: InputDecoration(
+          //       labelText: '选择房间',
+          //       contentPadding: const EdgeInsets.symmetric(
+          //         vertical: 12,
+          //         horizontal: 12,
+          //       ),
+          //       floatingLabelBehavior: FloatingLabelBehavior.always,
+          //       enabled: Aps().Connec_state.watch(context) == CoState.idle,
+          //       border: const OutlineInputBorder(),
+          //       prefixIcon: Icon(Icons.apartment, color: colorScheme.primary),
+          //       suffixIcon: Icon(Icons.menu, color: colorScheme.primary),
+          //     ),
+          //     child: IgnorePointer(
+          //       ignoring:
+          //           Aps().Connec_state.watch(context) == CoState.connected,
+          //       child: Text(
+          //         Aps().selectroom.watch(context)?.name ?? '请选择房间',
+          //         style: TextStyle(
+          //           color:
+          //               Aps().Connec_state.watch(context) != CoState.connected
+          //                   ? Theme.of(context).textTheme.bodyLarge?.color
+          //                   : Theme.of(context).disabledColor,
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
-          const SizedBox(height: 9),
+          // const SizedBox(height: 9),
 
-          SizedBox(
-            height: 60,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _virtualIPController,
-                    focusNode: _virtualIPFocusNode,
-                    enabled:
-                        !_aps.dhcp.watch(context) &&
-                        (Aps().Connec_state.watch(context) == CoState.idle),
-                    onChanged: (value) {
-                      if (!_aps.dhcp.watch(context)) {
-                        // 实时更新IPv4值并立即验证
-                        _aps.updateIpv4(value);
-                        setState(() {
-                          _isValidIP = _isValidIPv4(value);
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      labelText: '虚拟网IP',
-                      // 添加提示文本
-                      hintText: '不明白的话自动即可',
-                      border: const OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.lan, color: colorScheme.primary),
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 12,
-                      ),
-                      errorText:
-                          (!_aps.dhcp.watch(context) && !_isValidIP)
-                              ? '请输入有效的IPv4地址'
-                              : null,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Switch(
-                      value: _aps.dhcp.watch(context),
-                      onChanged: (value) {
-                        if (Aps().Connec_state.watch(context) == CoState.idle) {
-                          _aps.updateDhcp(value);
-                        }
-                      },
-                    ),
-                    Text(
-                      _aps.dhcp.watch(context) ? "自动" : "手动",
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          // SizedBox(
+          //   height: 60,
+          //   child: Row(
+          //     children: [
+          //       Expanded(
+          //         child: TextField(
+          //           controller: _virtualIPController,
+          //           focusNode: _virtualIPFocusNode,
+          //           enabled:
+          //               !_aps.dhcp.watch(context) &&
+          //               (Aps().Connec_state.watch(context) == CoState.idle),
+          //           onChanged: (value) {
+          //             if (!_aps.dhcp.watch(context)) {
+          //               // 实时更新IPv4值并立即验证
+          //               _aps.updateIpv4(value);
+          //               setState(() {
+          //                 _isValidIP = _isValidIPv4(value);
+          //               });
+          //             }
+          //           },
+          //           decoration: InputDecoration(
+          //             labelText: '虚拟网IP',
+          //             // 添加提示文本
+          //             hintText: '不明白的话自动即可',
+          //             border: const OutlineInputBorder(),
+          //             prefixIcon: Icon(Icons.lan, color: colorScheme.primary),
+          //             floatingLabelBehavior: FloatingLabelBehavior.always,
+          //             contentPadding: const EdgeInsets.symmetric(
+          //               vertical: 12,
+          //               horizontal: 12,
+          //             ),
+          //             errorText:
+          //                 (!_aps.dhcp.watch(context) && !_isValidIP)
+          //                     ? '请输入有效的IPv4地址'
+          //                     : null,
+          //           ),
+          //         ),
+          //       ),
+          //       const SizedBox(width: 8),
+          //       Column(
+          //         mainAxisAlignment: MainAxisAlignment.center,
+          //         children: [
+          //           Switch(
+          //             value: _aps.dhcp.watch(context),
+          //             onChanged: (value) {
+          //               if (Aps().Connec_state.watch(context) == CoState.idle) {
+          //                 _aps.updateDhcp(value);
+          //               }
+          //             },
+          //           ),
+          //           Text(
+          //             _aps.dhcp.watch(context) ? "自动" : "手动",
+          //             style: const TextStyle(fontSize: 12),
+          //           ),
+          //         ],
+          //       ),
+          //     ],
+          //   ),
+          // ),
 
-          if (_aps.dhcp.watch(context))
-            const Padding(
-              padding: EdgeInsets.only(top: 8.0),
-              child: Text('系统将自动分配虚拟网IP', style: TextStyle(fontSize: 12)),
-            )
-          else
-            const SizedBox(height: 12),
+          // if (_aps.dhcp.watch(context))
+          //   const Padding(
+          //     padding: EdgeInsets.only(top: 8.0),
+          //     child: Text('系统将自动分配虚拟网IP', style: TextStyle(fontSize: 12)),
+          //   )
+          // else
+          //   const SizedBox(height: 12),
         ],
       ),
     );
+  }
+}
+
+// 获取状态颜色
+Color _getStatusColor(CoState state, ColorScheme colorScheme) {
+  switch (state) {
+    case CoState.idle:
+      return Colors.grey;
+    case CoState.connecting:
+      return Colors.orange;
+    case CoState.connected:
+      return Colors.green;
+  }
+}
+
+// 获取状态文本
+String _getStatusText(CoState state) {
+  switch (state) {
+    case CoState.idle:
+      return '未连接';
+    case CoState.connecting:
+      return '连接中';
+    case CoState.connected:
+      return '已连接';
   }
 }

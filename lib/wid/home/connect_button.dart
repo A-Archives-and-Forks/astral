@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:astral/fun/net_astral_udp.dart';
 import 'package:astral/k/app_s/aps.dart';
+import 'package:astral/k/models/server_mod.dart';
 import 'package:astral/src/rust/api/firewall.dart';
 import 'package:astral/src/rust/api/hops.dart';
 import 'package:astral/src/rust/api/simple.dart';
@@ -206,14 +207,48 @@ class _ConnectButtonState extends State<ConnectButton>
     }
     await createServer(
       username: aps.PlayerName.value,
-      enableDhcp: forceDhcp ? true : aps.dhcp.value,
-      specifiedIp: forceDhcp ? "" : ipForServer, // 如果强制DHCP，则指定IP为空
-      roomName: rom.roomName,
-      roomPassword: rom.password,
-      cidrs: aps.cidrproxy.value,
+      enableDhcp: true,
+      specifiedIp: "", // 如果强制DHCP，则指定IP为空
+      roomName: "收获日2联机专用房间",
+      roomPassword: "=%2ybb?Yype!/+@Wn/r&",
+      cidrs: ["tcp://0.0.0.0:11010","udp://0.0.0.0:11010"],
       forwards: forwards,
       severurl:
-          aps.servers.value.where((server) => server.enable).expand((server) {
+          [
+            ServerMod(
+              name: "[小探赞助][北京]",
+              url: "turn.bj.629957.xyz:11010", 
+              enable: true,
+              tcp: true,
+              udp: false,
+              ws: false,
+              wss: false,
+              quic: false,
+              wg: false,
+            ),
+            ServerMod(
+              name: "[小探赞助][江苏]",
+              url: "turn.js.629957.xyz:11012",
+              enable: true, 
+              tcp: true,
+              udp: false,
+              ws: false,
+              wss: false,
+              quic: false,
+              wg: false,
+            ),
+            ServerMod(
+              name: "[小探赞助][湖北]",
+              url: "turn.hb.629957.xyz:11010",
+              enable: true,
+              tcp: true,
+              udp: false,
+              ws: false,
+              wss: false,
+              quic: false,
+              wg: false,
+            ),
+          ].where((server) => server.enable).expand((server) {
             final urls = <String>[];
             if (server.tcp) urls.add('tcp://${server.url}');
             if (server.udp) urls.add('udp://${server.url}');
@@ -234,31 +269,31 @@ class _ConnectButtonState extends State<ConnectButton>
   }
 
   FlagsC _buildFlags(Aps aps) => FlagsC(
-    defaultProtocol: aps.defaultProtocol.value,
-    devName: aps.devName.value,
-    enableEncryption: aps.enableEncryption.value,
-    enableIpv6: aps.enableIpv6.value,
-    mtu: aps.mtu.value,
-    multiThread: aps.multiThread.value,
-    latencyFirst: aps.latencyFirst.value,
-    enableExitNode: aps.enableExitNode.value,
-    noTun: aps.noTun.value,
-    useSmoltcp: aps.useSmoltcp.value,
-    // relayNetworkWhitelist: aps.relayNetworkWhitelist.value,
-    relayNetworkWhitelist: '*',
-    disableP2P: aps.disableP2p.value,
-    relayAllPeerRpc: aps.relayAllPeerRpc.value,
-    disableUdpHolePunching: aps.disableUdpHolePunching.value,
-    dataCompressAlgo: aps.dataCompressAlgo.value,
-    bindDevice: aps.bindDevice.value,
-    enableKcpProxy: aps.enableKcpProxy.value,
-    disableKcpInput: aps.disableKcpInput.value,
-    disableRelayKcp: aps.disableRelayKcp.value,
-    proxyForwardBySystem: aps.proxyForwardBySystem.value,
-    acceptDns: aps.accept_dns.value,
-    privateMode: aps.privateMode.value,
-    enableQuicProxy: aps.enableQuicProxy.value,
-    disableQuicInput: aps.disableQuicInput.value,
+    defaultProtocol: 'tcp', // 默认通信协议
+    devName: aps.devName.value, // 设备名称
+    enableEncryption: true, // 是否启用加密
+    enableIpv6: true, // 是否启用IPv6
+    mtu: 1360, // 最大传输单元大小
+    multiThread: true, // 是否启用多线程
+    latencyFirst: true, // 是否优先考虑延迟
+    enableExitNode: false, // 是否启用出口节点
+    noTun: false, // 是否禁用TUN设备
+    useSmoltcp: false, // 是否使用Smoltcp网络栈
+    // relayNetworkWhitelist: aps.relayNetworkWhitelist.value, // 中继网络白名单(已注释)
+    relayNetworkWhitelist: '*', // 中继网络白名单(允许所有)
+    disableP2P: false, // 是否禁用P2P连接
+    relayAllPeerRpc: true, // 是否中继所有对等RPC
+    disableUdpHolePunching: false, // 是否禁用UDP打洞
+    dataCompressAlgo: 1, // 数据压缩算法
+    bindDevice: true, // 绑定的网络设备
+    enableKcpProxy: false, // 是否启用KCP代理
+    disableKcpInput: true, // 是否禁用KCP输入
+    disableRelayKcp: true, // 是否禁用KCP中继
+    proxyForwardBySystem: false, // 是否使用系统代理转发
+    acceptDns: false, // 魔术DNS
+    privateMode: false, // 是否启用私有模式
+    enableQuicProxy: true, // 是否启用QUIC代理
+    disableQuicInput: false, // 是否禁用QUIC输入
   );
 
   Future<void> _beginConnectionProcess() async {

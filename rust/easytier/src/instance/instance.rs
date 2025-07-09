@@ -411,7 +411,7 @@ impl Instance {
         let nic_ctx = self.nic_ctx.clone();
         let _peer_packet_receiver = self.peer_packet_receiver.clone();
         tokio::spawn(async move {
-            let default_ipv4_addr = Ipv4Inet::new(Ipv4Addr::new(10, 126, 126, 0), 24).unwrap();
+            let default_ipv4_addr = Ipv4Inet::new(Ipv4Addr::new(100, 64, 0, 0), 10).unwrap();
             let mut current_dhcp_ip: Option<Ipv4Inet> = None;
             let mut next_sleep_time = 0;
             loop {

@@ -103,7 +103,6 @@ class Aps {
         await AppDatabase().AllSettings.updateRoom(s);
       }
     }
-    selectroom.value = await AppDatabase().AllSettings.getRoom();
     PlayerName.value = await AppDatabase().AllSettings.getPlayerName();
     listenList.value = await AppDatabase().AllSettings.getListenList();
     servers.value = await AppDatabase().ServerSetting.getAllServers();
@@ -760,12 +759,17 @@ class Aps {
   }
 
   /// 所选房间
-  final Signal<Room?> selectroom = signal(null);
+final Signal<Room> selectroom = signal(Room(
+  name: "收获日2联机专用房间", // 房间别名
+  encrypted: false, // 是否加密
+  roomName: "收获日2联机专用房间", // 房间名称
+  password: "=%2ybb?Yype!/+@Wn/r&", // 房间密码
+  messageKey: "=%2ybb?Yype!/+@Wn/r&", // 消息密钥
+));
 
   /// 设置当前选中的房间
   Future<void> setRoom(Room room) async {
     await AppDatabase().AllSettings.updateRoom(room);
-    selectroom.value = await AppDatabase().AllSettings.getRoom();
     _startPingAllServers(); // 启动Ping测试
   }
 
